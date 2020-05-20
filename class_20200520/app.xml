@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd">
+
+	<!-- 1. 핵심 Class 빈즈 등록 -->
+	<bean id="testServiceImpl" class="sp.aop.TestServiceImpl"/>
+	// id : 객체명
+
+	<!-- 2. Advice Class 빈즈 등록 -->
+	<bean id="beforeLog" class="sp.aop.BeforeLogAdvice"/>
+	
+	<!-- 3. PointCut 생성 -->
+	<!-- 어느 위치에서 AOP Method를 지정해서 실행 -->
+	<!-- value="접근 지정 반환형 package명... Class명 하위 package명(..) 특정 Method명 0개 이상" -->
+	<!--  (*) 매개변수 한개 표시, (*,*) 매개변수 2개 표시 -->
+
+	<bean id="writePointcut" [객체명] class="org.springframework.aop.support.JdkRegexpMethodPointcut">
+		<property name="pattern(Method 위치)" value=".*write.*"/>
+	</bean>
+	name속성 절대 바뀔 수 없음(class 내 멤버변수이기 때문)
+	[패턴에 들어갈 값은 Method의 위치를 써준다.] --> 모든 패키지 내부에 있는 write메소드 라고 써준 것임
+	
+	<!-- 4. Advice + PointCut(Advisor) 설정 -->
+	<bean id="testAdvisor"[객체명] class="org.springframework.aop.support.DefaultPointcutAdvisor"> // 수정 불가능
+		<property name="advice" ref="beforeLog(advice 객체를 지정)" />
+			[네임속성 변경 불가, advice가 들어가는것은 객체명이 들어가야 해서 ref속성을 넣음.]
+		<property name="pointcut" ref="writePointcut" />
+	</bean>
+	
+	<!-- 5. AOP를 적용(ProxyFactoryBean 객체 생성) ->AOP 객체 생성 -->
+	<!-- target(핵심 Class) -->
+	<bean id="testService"[객체명] class="org.springframework.aop.framework.ProxyFactoryBean"> // 수정 불가능
+							[객체를 만들기 위한 풀 패키지 네임]
+
+		<property name="target"[원래 클래스에서 제공하는 것이기 때문에 수정 불가능, 멤버변수] ref="testServiceImpl(핵심 Class 빈즈 등록)"/>
+		<property name="interceptorNames(advisor를 등록시켜줄 때 필요로 하는 멤버 변수 - 기본이 리스트 형태로 받는다)">
+			<list>                                 그래서 값을 넣어주려면 list 태그에 value 속성이 필요
+				<value>testAdvisor(실행시킬 advisor 등록)</value> // 값을 더 넣고 싶다면, 이 부분에 벨류들 추가
+			</list>
+		</property>
+	</bean>
+	<!- ////// END AOP 환경설정 부분 -->
+</beans>
